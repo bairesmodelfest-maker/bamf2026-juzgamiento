@@ -1,0 +1,1694 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>BAMF 2026 — Juzgamiento</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#f4ede0;
+  --paper-soft:#ebe2d2;
+  --ink:#0e0c08;
+  --ink-soft:#3a342a;
+  --accent:#c8954b;
+  --accent-deep:#a87635;
+  --line:#cdc3b0;
+  --error:#c4453d;
+  --ok:#7a9d6a;
+  --warn:#d49a2c;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;min-height:100%;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+html{scroll-behavior:smooth}
+body{font-family:'Fraunces',serif;background:var(--paper);color:var(--ink);-webkit-tap-highlight-color:transparent;line-height:1.4;overscroll-behavior:none}
+
+/* === SCREENS === */
+.screen{display:none;min-height:100vh;flex-direction:column;animation:fadeIn .2s ease-out}
+.screen.active{display:flex}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+/* === TOPBAR (en pantallas internas) === */
+.topbar{background:var(--ink);color:var(--paper);padding:8px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;border-bottom:2px solid var(--accent-deep);flex-shrink:0;position:sticky;top:0;z-index:40;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.topbar-info{flex:1;min-width:0}
+.topbar-orden{font-family:'Fraunces',serif;font-weight:700;font-size:19px;color:var(--accent);line-height:1;letter-spacing:-.02em}
+.topbar-orden::before{content:'#';color:var(--paper);opacity:.5;font-weight:400;margin-right:.04em}
+.topbar-modelo{font-family:'Fraunces',serif;font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:.02em;line-height:1.2;color:var(--paper);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar-step{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--accent);opacity:.85;margin-top:3px}
+.topbar-cancel{background:transparent;border:1px solid var(--paper);color:var(--paper);padding:6px 10px;font-family:'Fraunces',serif;font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;cursor:pointer;border-radius:2px;white-space:nowrap;flex-shrink:0}
+.topbar-cancel:hover,.topbar-cancel:active{background:var(--error);border-color:var(--error)}
+
+/* === CONTENT === */
+.content{flex:1;padding:12px 18px 82px;display:flex;flex-direction:column}
+.content-center{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;padding-bottom:16px}
+
+/* === WELCOME === */
+#s-welcome .content{justify-content:center;align-items:center;padding-top:4vh}
+.welcome-title{font-family:'Fraunces',serif;font-weight:400;font-size:clamp(25px,7vw,39px);text-align:center;margin-bottom:6px;line-height:1.05;color:var(--ink)}
+.welcome-title em{font-style:italic;color:var(--accent);font-weight:600}
+.welcome-sub{font-family:'Fraunces',serif;font-size:clamp(14px,3.5vw,19px);color:var(--ink-soft);font-style:italic;text-align:center;margin-bottom:22px;opacity:.85;line-height:1.35;padding:0 12px}
+.welcome-brand{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--accent-deep);margin-bottom:24px;opacity:.8}
+
+.input-display{font-family:'JetBrains Mono',monospace;font-size:clamp(30px,9vw,50px);font-weight:600;letter-spacing:.1em;min-height:64px;padding:10px 24px;border-bottom:3px solid var(--ink);min-width:min(320px,75vw);text-align:center;margin-bottom:16px;color:var(--ink);background:transparent}
+.input-display.empty{color:var(--ink-soft);opacity:.3}
+.input-display.empty::before{content:'#'}
+.input-display .hash{color:var(--accent);font-weight:600;margin-right:.05em}
+
+.numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;width:min(360px,82vw);margin-bottom:16px}
+.key{background:var(--paper-soft);border:1px solid var(--line);border-radius:3px;font-family:'Fraunces',serif;font-weight:500;font-size:clamp(20px,4.5vw,28px);color:var(--ink);transition:all .12s;cursor:pointer;aspect-ratio:1.8/1;display:flex;align-items:center;justify-content:center;user-select:none;-webkit-user-select:none}
+.key:active{background:var(--ink);color:var(--paper);border-color:var(--ink);transform:scale(.96)}
+
+.actions-row{display:flex;gap:10px;width:min(360px,82vw);margin-bottom:10px}
+.btn-big{flex:1;padding:14px 16px;font-family:'Fraunces',serif;font-size:13px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;border:1.5px solid var(--ink);border-radius:2px;cursor:pointer;transition:all .2s;background:transparent;color:var(--ink)}
+.btn-big.primary{background:var(--ink);color:var(--paper)}
+.btn-big.primary:active{background:var(--ink-soft)}
+.btn-big.ghost:active{background:var(--ink);color:var(--paper)}
+.btn-big.danger{background:var(--error);color:var(--paper);border-color:var(--error)}
+.btn-big.success{background:var(--ok);color:var(--paper);border-color:var(--ok)}
+.btn-big:disabled{opacity:.35;cursor:not-allowed}
+
+/* === CONFIRM MODEL === */
+.confirm-card{background:var(--paper-soft);border:1px solid var(--line);border-radius:4px;padding:22px 18px;margin-bottom:18px}
+.confirm-orden{font-family:'Fraunces',serif;font-weight:700;font-size:44px;line-height:1;color:var(--accent);text-align:center;letter-spacing:-.02em;margin-bottom:8px}
+.confirm-orden::before{content:'#';color:var(--ink);opacity:.4;font-weight:400}
+.confirm-nombre{font-family:'Fraunces',serif;font-weight:600;font-size:22px;text-align:center;text-transform:uppercase;letter-spacing:.01em;line-height:1.2;color:var(--ink);margin-bottom:18px}
+.confirm-data{display:flex;flex-direction:column;gap:10px;margin-bottom:8px}
+.confirm-data-row{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding:6px 0;border-bottom:1px dashed var(--line)}
+.confirm-data-row:last-child{border-bottom:none}
+.confirm-data-label{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-soft);opacity:.7;flex-shrink:0;padding-top:3px}
+.confirm-data-value{font-family:'Fraunces',serif;font-size:14px;font-weight:500;color:var(--ink);text-align:right;line-height:1.3}
+.confirm-data-value-grado{font-size:15px;font-weight:700}
+
+.doc-button{display:block;background:var(--accent-deep);color:var(--paper);padding:14px 18px;border:none;border-radius:3px;font-family:'Fraunces',serif;font-size:14px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;width:100%;text-align:center;margin-bottom:18px;text-decoration:none}
+.doc-button:active{background:var(--accent)}
+
+/* === MATRIX (calificación) === */
+.matrix-section{margin-bottom:14px}
+.matrix-title{font-family:'Fraunces',serif;font-weight:600;font-size:18px;color:var(--ink);margin-bottom:5px;line-height:1.2}
+.matrix-subtitle{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--accent-deep);margin-bottom:12px}
+.matrix-legend{font-family:'Fraunces',serif;font-size:11.5px;color:var(--ink-soft);font-style:italic;margin-bottom:8px;line-height:1.25;padding:5px 9px;background:var(--paper-soft);border-left:3px solid var(--accent);border-radius:2px}
+.matrix-row{display:flex;flex-direction:column;gap:4px;margin-bottom:6px;padding:6px 7px;background:var(--paper-soft);border-radius:3px}
+.matrix-row-label{font-family:'Fraunces',serif;font-weight:500;font-size:12.5px;color:var(--ink)}
+.matrix-options{display:flex;gap:5px;justify-content:space-between}
+.matrix-opt{flex:1;min-width:44px;min-height:40px;display:flex;align-items:center;justify-content:center;background:#f1f0ee;border:1.5px solid var(--line);border-radius:3px;font-family:'Fraunces',serif;font-weight:700;font-size:11.5px;line-height:1.1;text-align:center;white-space:normal;word-break:normal;padding:3px;color:#000;cursor:pointer;transition:all .12s;user-select:none;-webkit-user-select:none}
+.matrix-opt:active{transform:scale(.95)}
+.matrix-opt.selected{background:#000;color:#fff;border-color:#000;box-shadow:0 2px 6px rgba(0,0,0,.2)}
+.matrix-opt.empty{opacity:.6}
+
+/* Score panel inline (no sticky, fluye con el contenido) */
+.score-panel{background:var(--ink);color:var(--paper);padding:10px 14px;margin:10px -18px;border-top:2px solid var(--accent-deep);border-bottom:2px solid var(--accent-deep);z-index:1}
+.score-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-family:'JetBrains Mono',monospace}
+.score-cell{display:flex;flex-direction:column;align-items:center}
+.score-label{font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--accent);opacity:.85;margin-bottom:2px}
+.score-value{font-family:'Fraunces',serif;font-size:22px;font-weight:700;color:var(--paper);line-height:1}
+.score-value.error{color:var(--error)}
+.score-final{background:var(--accent-deep);color:var(--paper);padding:10px;border-radius:3px;margin-top:10px;text-align:center}
+.score-final-label{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.2em;text-transform:uppercase;opacity:.9;margin-bottom:3px}
+.score-final-value{font-family:'Fraunces',serif;font-size:26px;font-weight:700;line-height:1.05}
+.score-premio{margin-top:6px;font-family:'Fraunces',serif;font-size:14px;font-weight:600;letter-spacing:.05em;text-transform:uppercase}
+
+/* === CHECKLIST === */
+.checklist-title{font-family:'Fraunces',serif;font-weight:600;font-size:18px;color:var(--ink);margin-bottom:6px;line-height:1.2}
+.checklist-subtitle{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--accent-deep);margin-bottom:14px}
+.select-counter{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent-deep);margin-bottom:14px;padding:8px 12px;background:var(--paper-soft);border-left:3px solid var(--accent);border-radius:2px;font-weight:600}
+.select-counter.full{color:var(--paper);background:var(--accent-deep);border-left-color:var(--ink)}
+.check-item.disabled{opacity:.4;pointer-events:none}
+.check-item.disabled .check-box{border-color:var(--ink-soft)}
+.check-item{display:flex;align-items:flex-start;gap:12px;padding:14px 10px;border-bottom:1px solid var(--line);cursor:pointer;-webkit-tap-highlight-color:transparent;min-height:54px}
+.check-item:active{background:var(--paper-soft)}
+.check-box{flex-shrink:0;width:24px;height:24px;border:2px solid var(--ink);border-radius:3px;background:var(--paper);display:flex;align-items:center;justify-content:center;font-weight:bold;color:var(--paper);transition:all .12s;font-family:'JetBrains Mono',monospace;font-size:14px;margin-top:1px}
+.check-item.checked .check-box{background:var(--ink);color:var(--accent)}
+.check-item.checked .check-box::after{content:'✓'}
+.check-label{flex:1;font-family:'Fraunces',serif;font-size:14px;color:var(--ink);line-height:1.35}
+.check-item.checked .check-label{font-weight:500}
+.check-other-input{display:none;margin-top:8px;padding:10px;background:var(--paper);border:1px solid var(--line);border-radius:3px;font-family:'Fraunces',serif;font-size:14px;width:100%}
+.check-item.checked .check-other-input{display:block}
+
+/* === TEXTAREA === */
+.field-block{margin-bottom:18px}
+.field-label{font-family:'Fraunces',serif;font-weight:600;font-size:15px;color:var(--ink);margin-bottom:6px;display:block}
+.field-help{font-family:'Fraunces',serif;font-size:12px;color:var(--ink-soft);font-style:italic;margin-bottom:8px;line-height:1.3}
+.field-input,.field-textarea{font-family:'Fraunces',serif;font-size:15px;width:100%;padding:12px 14px;background:var(--paper);border:1.5px solid var(--line);border-radius:3px;color:var(--ink);line-height:1.4}
+.field-input:focus,.field-textarea:focus{outline:none;border-color:var(--accent-deep);background:#fff}
+.field-textarea{min-height:120px;resize:vertical}
+.field-counter{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-soft);opacity:.7;text-align:right;margin-top:3px;letter-spacing:.05em}
+
+/* === REVIEW === */
+.review-card{background:var(--paper-soft);border:1px solid var(--line);border-radius:4px;padding:18px 16px;margin-bottom:16px}
+.review-card h3{font-family:'Fraunces',serif;font-weight:600;font-size:14px;color:var(--accent-deep);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.review-list{font-family:'Fraunces',serif;font-size:14px;color:var(--ink);line-height:1.6}
+.review-list-item{padding:3px 0;display:flex;gap:6px}
+.review-list-item::before{content:'•';color:var(--accent);font-weight:bold}
+.review-text{font-family:'Fraunces',serif;font-size:14px;color:var(--ink);line-height:1.5;font-style:italic;white-space:pre-wrap}
+
+.review-big{background:var(--ink);color:var(--paper);padding:20px;border-radius:4px;margin-bottom:18px}
+.review-big-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.1);font-family:'JetBrains Mono',monospace;font-size:13px}
+.review-big-row:last-child{border-bottom:none}
+.review-big-label{opacity:.7;letter-spacing:.1em;text-transform:uppercase;font-size:10px}
+.review-big-value{font-family:'Fraunces',serif;font-size:18px;font-weight:600;color:var(--accent)}
+.review-big-row.premio .review-big-value{font-size:22px;color:var(--paper);text-transform:uppercase;letter-spacing:.05em}
+
+/* === SUCCESS === */
+#s-success .content{justify-content:center;align-items:center;text-align:center;padding:40px 20px}
+.success-icon{width:90px;height:90px;border-radius:50%;background:var(--ok);color:white;display:flex;align-items:center;justify-content:center;font-size:50px;margin-bottom:22px;animation:popIn .4s ease-out;font-family:serif}
+@keyframes popIn{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+.success-title{font-family:'Fraunces',serif;font-weight:500;font-size:30px;color:var(--ink);margin-bottom:8px;line-height:1.1}
+.success-title em{font-style:italic;color:var(--ok)}
+.success-sub{font-family:'Fraunces',serif;font-size:16px;color:var(--ink-soft);margin-bottom:32px;line-height:1.45}
+.success-orden{font-family:'JetBrains Mono',monospace;font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent-deep);margin-bottom:32px;font-weight:500}
+
+/* === ACTION BAR (sticky bottom, fixed style en mobile) === */
+.action-bar{position:fixed;bottom:0;left:0;right:0;background:var(--paper);padding:8px 16px;border-top:2px solid var(--accent-deep);display:flex;gap:10px;z-index:50;box-shadow:0 -6px 20px rgba(0,0,0,.12)}
+.action-bar .btn-big{flex:1;min-height:42px;font-size:12px;letter-spacing:.1em;padding:9px 10px}
+/* En welcome el action bar no se usa, dejamos espacio */
+#s-welcome .action-bar,#s-success .action-bar{position:static;border:none;box-shadow:none;padding:0}
+
+/* === MODAL === */
+.modal{position:fixed;inset:0;background:rgba(14,12,8,.78);display:none;align-items:center;justify-content:center;z-index:300;padding:18px;animation:fadeIn .2s ease-out;overflow-y:auto}
+.modal.show{display:flex}
+.modal-card{background:var(--paper);border:2px solid var(--accent-deep);border-radius:4px;padding:28px 22px;max-width:min(440px,92vw);text-align:center;animation:popIn .25s ease-out;box-shadow:0 20px 60px rgba(0,0,0,.4);margin:auto}
+.modal-card.error{border-color:var(--error)}
+.modal-card.warn{border-color:var(--warn)}
+.modal-icon{width:64px;height:64px;border-radius:50%;background:var(--accent-deep);color:var(--paper);font-family:'Fraunces',serif;font-weight:700;font-size:40px;line-height:64px;margin:0 auto 16px}
+.modal-card.error .modal-icon{background:var(--error)}
+.modal-card.warn .modal-icon{background:var(--warn)}
+.modal-title{font-family:'Fraunces',serif;font-weight:600;font-size:22px;color:var(--ink);margin-bottom:10px;line-height:1.2}
+.modal-title em{font-style:italic;color:var(--accent-deep)}
+.modal-card.error .modal-title em{color:var(--error)}
+.modal-body{font-family:'Fraunces',serif;font-size:15px;color:var(--ink-soft);line-height:1.4;margin-bottom:22px}
+.modal-body strong{color:var(--ink);font-weight:600}
+.modal-actions{display:flex;gap:10px}
+.modal-actions .btn-big{flex:1;min-height:44px}
+
+/* === PIN INPUT === */
+.pin-display{font-family:'JetBrains Mono',monospace;font-size:36px;font-weight:600;letter-spacing:.4em;text-align:center;padding:14px;border-bottom:3px solid var(--ink);min-height:70px;margin-bottom:18px;color:var(--ink);background:transparent}
+
+/* === DOC VIEWER (iframe Cincopa) === */
+#s-doc-viewer{display:none}
+#s-doc-viewer.active{display:flex}
+.doc-iframe-wrap{flex:1;width:100%;background:#3a342a;position:relative;overflow:hidden}
+.doc-iframe-wrap iframe{position:absolute;inset:0;width:100%;height:100%;border:none;background:#fff}
+
+/* === LOADER === */
+#loader{position:fixed;inset:0;background:rgba(244,237,224,.95);display:none;align-items:center;justify-content:center;z-index:500;flex-direction:column;gap:14px}
+#loader.show{display:flex}
+.spinner{width:42px;height:42px;border:3px solid var(--line);border-top-color:var(--accent-deep);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loader-text{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-soft);letter-spacing:.15em;text-transform:uppercase;opacity:.7}
+
+/* === SECTION HEADER === */
+.section-h1{font-family:'Fraunces',serif;font-weight:500;font-size:22px;color:var(--ink);margin-bottom:4px;line-height:1.1}
+.section-h1 em{font-style:italic;color:var(--accent-deep);font-weight:600}
+.section-h1-sm{font-size:20px;margin-bottom:12px}
+.section-sub{font-family:'Fraunces',serif;font-size:12.5px;color:var(--ink-soft);font-style:italic;margin-bottom:10px;line-height:1.3}
+</style>
+</head>
+<body>
+
+<!-- ========== LOADER ========== -->
+<div id="loader">
+  <div class="spinner"></div>
+  <div class="loader-text" id="loaderText">Cargando…</div>
+</div>
+
+<!-- ========== SCREEN: WELCOME ========== -->
+<div class="screen active" id="s-welcome">
+  <div class="content content-center">
+    <h1 class="welcome-title">Tipeá el <em>código</em> del modelo</h1>
+    <p class="welcome-sub">Ingresá el número de orden del modelo a juzgar</p>
+    <div class="input-display empty" id="inputDisplay">0</div>
+    <div class="numpad" id="numpad"></div>
+    <div class="actions-row">
+      <button class="btn-big ghost" onclick="clearInput()">BORRAR</button>
+      <button class="btn-big primary" id="btnSearch" onclick="doSearch()">BUSCAR</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== SCREEN: CONFIRM MODEL ========== -->
+<div class="screen" id="s-confirm">
+  <div class="topbar">
+    <div class="topbar-info">
+      <div class="topbar-orden" id="tbOrden">—</div>
+      <div class="topbar-step">PASO 1 DE 5 · CONFIRMAR MODELO</div>
+    </div>
+    <button class="topbar-cancel" onclick="cancelFlow()">Cancelar</button>
+  </div>
+  <div class="content">
+    <div class="confirm-card">
+      <div class="confirm-orden" id="cfOrden">—</div>
+      <div class="confirm-nombre" id="cfNombre">—</div>
+      <div class="confirm-data" id="cfData"></div>
+    </div>
+    <button class="doc-button" id="btnVerDoc" style="display:none" onclick="abrirDocViewer()">📎 Ver documentación de respaldo</button>
+    <div class="action-bar">
+      <button class="btn-big ghost" onclick="cancelFlow()">← Cancelar</button>
+      <button class="btn-big primary" onclick="goEtapa1()">Empezar juzgamiento →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== SCREEN: DOCUMENTACION (iframe Cincopa) ========== -->
+<div class="screen" id="s-doc-viewer">
+  <div class="topbar">
+    <div class="topbar-info">
+      <div class="topbar-orden" id="tbDocOrden">—</div>
+      <div class="topbar-step">Documentación de respaldo</div>
+    </div>
+    <button class="topbar-cancel" onclick="goScreen('confirm')">← Volver</button>
+  </div>
+  <div class="doc-iframe-wrap">
+    <iframe id="docIframe" src="about:blank" title="Documentación"></iframe>
+  </div>
+</div>
+
+<!-- ========== SCREEN: ETAPA 1 ========== -->
+<div class="screen" id="s-etapa1">
+  <div class="topbar">
+    <div class="topbar-info">
+      <div class="topbar-orden" id="tb1Orden">—</div>
+      <div class="topbar-modelo" id="tb1Modelo">—</div>
+      <div class="topbar-step">PASO 2 DE 5 · CALIFICACIÓN BÁSICA</div>
+    </div>
+    <button class="topbar-cancel" onclick="cancelFlow()">Cancelar</button>
+  </div>
+  <div class="content">
+    <h2 class="section-h1 section-h1-sm">Etapa 1: <em>Calificación Básica</em></h2>
+    <div id="matrix1"></div>
+    <div class="score-panel">
+      <div class="score-grid">
+        <div class="score-cell">
+          <span class="score-label">Suma cruda</span>
+          <span class="score-value" id="m1Suma">0</span>
+        </div>
+        <div class="score-cell">
+          <span class="score-label">Básica + Pond.</span>
+          <span class="score-value" id="m1Calc">—</span>
+        </div>
+      </div>
+    </div>
+    <div class="action-bar">
+      <button class="btn-big ghost" onclick="goScreen('confirm')">← Atrás</button>
+      <button class="btn-big primary" id="btnEtapa1Next" onclick="goEtapa2()" disabled>Siguiente →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== SCREEN: ETAPA 2 ========== -->
+<div class="screen" id="s-etapa2">
+  <div class="topbar">
+    <div class="topbar-info">
+      <div class="topbar-orden" id="tb2Orden">—</div>
+      <div class="topbar-modelo" id="tb2Modelo">—</div>
+      <div class="topbar-step">PASO 3 DE 5 · CALIFICACIÓN COMPLEMENTARIA</div>
+    </div>
+    <button class="topbar-cancel" onclick="cancelFlow()">Cancelar</button>
+  </div>
+  <div class="content">
+    <h2 class="section-h1 section-h1-sm">Etapa 2: <em>Calificación Complementaria</em></h2>
+    <div id="matrix2"></div>
+    <div class="score-panel">
+      <div class="score-grid">
+        <div class="score-cell">
+          <span class="score-label">Básica</span>
+          <span class="score-value" id="m2Basica">—</span>
+        </div>
+        <div class="score-cell">
+          <span class="score-label">Complement.</span>
+          <span class="score-value" id="m2Comp">—</span>
+        </div>
+      </div>
+      <div class="score-final">
+        <div class="score-final-label">Calificación final</div>
+        <div class="score-final-value" id="m2Final">—</div>
+        <div class="score-premio" id="m2Premio">—</div>
+      </div>
+    </div>
+    <div class="action-bar">
+      <button class="btn-big ghost" onclick="goScreen('etapa1')">← Atrás</button>
+      <button class="btn-big primary" id="btnEtapa2Next" onclick="goAspectos()" disabled>Siguiente →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== SCREEN: ASPECTOS DESTACADOS ========== -->
+<div class="screen" id="s-aspectos">
+  <div class="topbar">
+    <div class="topbar-info">
+      <div class="topbar-orden" id="tbAOrden">—</div>
+      <div class="topbar-modelo" id="tbAModelo">—</div>
+      <div class="topbar-step">PASO 4 DE 5 · ASPECTOS DESTACADOS</div>
+    </div>
+    <button class="topbar-cancel" onclick="cancelFlow()">Cancelar</button>
+  </div>
+  <div class="content">
+    <h2 class="section-h1">Aspectos <em>destacados</em></h2>
+    <p class="section-sub">Marcá hasta 3 puntos positivos del modelo</p>
+    <div class="select-counter" id="aspectosCounter">0 de 3 seleccionados</div>
+    <div id="aspectosList"></div>
+    <div class="action-bar">
+      <button class="btn-big ghost" onclick="goScreen('etapa2')">← Atrás</button>
+      <button class="btn-big primary" onclick="goSugerencias()">Siguiente →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== SCREEN: SUGERENCIAS ========== -->
+<div class="screen" id="s-sugerencias">
+  <div class="topbar">
+    <div class="topbar-info">
+      <div class="topbar-orden" id="tbSOrden">—</div>
+      <div class="topbar-modelo" id="tbSModelo">—</div>
+      <div class="topbar-step">PASO 4 DE 5 · SUGERENCIAS</div>
+    </div>
+    <button class="topbar-cancel" onclick="cancelFlow()">Cancelar</button>
+  </div>
+  <div class="content">
+    <h2 class="section-h1">Sugerencias para <em>mejorar</em></h2>
+    <p class="section-sub">Marcá hasta 3 puntos a trabajar</p>
+    <div class="select-counter" id="sugerenciasCounter">0 de 3 seleccionados</div>
+    <div id="sugerenciasList"></div>
+    <div class="action-bar">
+      <button class="btn-big ghost" onclick="goScreen('aspectos')">← Atrás</button>
+      <button class="btn-big primary" onclick="goConclusiones()">Siguiente →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== SCREEN: CONCLUSIONES + JURADOS ========== -->
+<div class="screen" id="s-conclusiones">
+  <div class="topbar">
+    <div class="topbar-info">
+      <div class="topbar-orden" id="tbCOrden">—</div>
+      <div class="topbar-modelo" id="tbCModelo">—</div>
+      <div class="topbar-step">PASO 5 DE 5 · FINALIZAR</div>
+    </div>
+    <button class="topbar-cancel" onclick="cancelFlow()">Cancelar</button>
+  </div>
+  <div class="content">
+    <h2 class="section-h1">Finalizar <em>juzgamiento</em></h2>
+    <p class="section-sub">Conclusiones y apellidos de la dupla de jueces</p>
+
+    <div class="field-block">
+      <label class="field-label" for="fldConclusiones">Conclusiones y comentarios adicionales</label>
+      <p class="field-help">Opcional. Máximo 80 caracteres.</p>
+      <textarea class="field-textarea" id="fldConclusiones" maxlength="80" placeholder="Ej: Excelente trabajo, muy buena idea..."></textarea>
+      <div class="field-counter" id="conclusionesCounter">0/80</div>
+    </div>
+
+    <div class="field-block">
+      <label class="field-label" for="fldApellidos">Apellidos de los jurados *</label>
+      <p class="field-help">Apellidos de la dupla de jueces que firma el juzgamiento. Ej: LAGIGLIA, DIAZ</p>
+      <input type="text" class="field-input" id="fldApellidos" placeholder="LAGIGLIA, DIAZ" maxlength="100">
+    </div>
+
+    <div class="action-bar">
+      <button class="btn-big ghost" onclick="goScreen('sugerencias')">← Atrás</button>
+      <button class="btn-big primary" onclick="goReview()">Revisar →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== SCREEN: REVIEW ========== -->
+<div class="screen" id="s-review">
+  <div class="topbar">
+    <div class="topbar-info">
+      <div class="topbar-orden" id="tbROrden">—</div>
+      <div class="topbar-modelo" id="tbRModelo">—</div>
+      <div class="topbar-step">REVISAR ANTES DE ENVIAR</div>
+    </div>
+    <button class="topbar-cancel" onclick="cancelFlow()">Cancelar</button>
+  </div>
+  <div class="content">
+    <h2 class="section-h1">Revisar <em>juzgamiento</em></h2>
+    <p class="section-sub">Una vez enviado, no podrás modificarlo sin un PIN</p>
+
+    <div class="review-big">
+      <div class="review-big-row">
+        <span class="review-big-label">Básica + Pond.</span>
+        <span class="review-big-value" id="rvBasica">—</span>
+      </div>
+      <div class="review-big-row">
+        <span class="review-big-label">Complementaria</span>
+        <span class="review-big-value" id="rvComp">—</span>
+      </div>
+      <div class="review-big-row">
+        <span class="review-big-label">Final</span>
+        <span class="review-big-value" id="rvFinal">—</span>
+      </div>
+      <div class="review-big-row premio">
+        <span class="review-big-label">Premio sugerido</span>
+        <span class="review-big-value" id="rvPremio">—</span>
+      </div>
+    </div>
+
+    <div class="review-card">
+      <h3>Grado de Concurso</h3>
+      <p class="field-help" style="margin-bottom:10px">Precargado desde la inscripción. Cambialo solo si el jurado decide recategorizar el modelo (por ejemplo, a MASTER).</p>
+      <select class="field-input" id="fldGradoOverride" onchange="onGradoOverrideChange()">
+        <option value="Junior">Junior</option>
+        <option value="Promocional">Promocional</option>
+        <option value="General de Concurso">General de Concurso</option>
+        <option value="Master">Master</option>
+      </select>
+    </div>
+
+    <div class="review-card">
+      <h3>Aspectos destacados</h3>
+      <div class="review-list" id="rvAspectos"><em style="opacity:.5">(ninguno seleccionado)</em></div>
+    </div>
+
+    <div class="review-card">
+      <h3>Sugerencias para mejorar</h3>
+      <div class="review-list" id="rvSugerencias"><em style="opacity:.5">(ninguno seleccionado)</em></div>
+    </div>
+
+    <div class="review-card">
+      <h3>Conclusiones</h3>
+      <div class="review-text" id="rvConclusiones"><em style="opacity:.5">(sin comentarios)</em></div>
+    </div>
+
+    <div class="review-card">
+      <h3>Apellidos de los jurados</h3>
+      <div class="review-text" id="rvApellidos">—</div>
+    </div>
+
+    <div class="action-bar">
+      <button class="btn-big ghost" onclick="goScreen('conclusiones')">← Modificar</button>
+      <button class="btn-big success" id="btnEnviar" onclick="enviarJuzgamiento()">✓ Enviar definitivo</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== SCREEN: SUCCESS ========== -->
+<div class="screen" id="s-success">
+  <div class="content">
+    <div class="success-icon">✓</div>
+    <h2 class="success-title">Juzgamiento <em>enviado</em></h2>
+    <p class="success-sub">Se guardó correctamente en el sistema.</p>
+    <div class="success-orden" id="successOrden">—</div>
+    <button class="btn-big primary" onclick="restartFlow()" style="min-width:240px;padding:16px 22px;font-size:14px">Juzgar otro modelo</button>
+  </div>
+</div>
+
+<!-- ========== MODAL GENÉRICO ========== -->
+<div id="modal" class="modal">
+  <div class="modal-card" id="modalCard">
+    <div class="modal-icon" id="modalIcon">!</div>
+    <div class="modal-title" id="modalTitle">Aviso</div>
+    <div class="modal-body" id="modalBody">—</div>
+    <div class="modal-actions" id="modalActions">
+      <button class="btn-big primary" onclick="closeModal()">Aceptar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== MODAL PIN (modelo ya juzgado) ========== -->
+<div id="modalPin" class="modal">
+  <div class="modal-card warn">
+    <div class="modal-icon">⚠</div>
+    <div class="modal-title">Modelo ya <em>juzgado</em></div>
+    <div class="modal-body" id="pinBody">
+      Este modelo ya fue juzgado anteriormente.<br>
+      Para modificar el juzgamiento, ingresá el <strong>PIN de organizador</strong>.
+    </div>
+    <div class="pin-display empty" id="pinDisplay">····</div>
+    <div class="numpad" id="pinNumpad" style="width:100%;margin-bottom:16px"></div>
+    <div class="modal-actions">
+      <button class="btn-big ghost" onclick="closePinModal()">Cancelar</button>
+      <button class="btn-big primary" id="btnPinOk" onclick="verifyPin()">Verificar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============ CONFIG ============
+var JOTFORM_FORM_INSCRIPCION = '240386129030651';
+var JOTFORM_FORM_JUZGAMIENTO = '241387353267664';
+var PIN_ORGANIZADOR = '241430';
+var URL_CONSULTOR_DOCS = 'https://bamf2026-consulta.pages.dev/bamf2026_consulta_documentacion_v9.html';
+
+// ============ PROXY SEGURO (Cloudflare Pages Function) ============
+// La API Key de JotForm ya NO vive acá — vive del lado del servidor, en
+// functions/api/jf.js. Esta función es la única que habla con JotForm,
+// pasando siempre por ese proxy.
+function jfCall(op, path, params, formFields){
+  return fetch('/api/jf', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({op:op, path:path, params:params||{}, formFields:formFields||null})
+  }).then(function(r){
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    return r.json();
+  }).then(function(res){
+    if(!res.ok) throw new Error(res.error || 'Error del servidor');
+    return res.data;
+  });
+}
+
+// QIDs INSCRIPCIÓN
+var QID_INSCR = {
+  orden: '448',
+  nombreModelo: '461',
+  apellidoNombre: '380',
+  grado: '384',
+  categoria: '362',
+  subAviacion: '363',
+  subMilitaria: '364',
+  subCiviles: '365',
+  subNavales: '366',
+  subFiguras: '367',
+  subDioramas: '368',
+  subScratch: '419',
+  subFantasia: '369',
+  subFFAA: '420',
+  escala: '416',
+  documentacion: '376',
+  adjuntoCincopa: '486'
+};
+
+// QIDs JUZGAMIENTO
+var QID_JUZG = {
+  orden: '488',
+  grado: '384',
+  nombreModelo: '361',
+  categoria: '362',
+  subAviacion: '363',
+  subMilitaria: '364',
+  subCiviles: '365',
+  subNavales: '366',
+  subFiguras: '367',
+  subDioramas: '368',
+  subScratch: '419',
+  subFantasia: '369',
+  subFFAA: '420',
+  documentacion: '585',
+  deseaPresentar: '579',
+  matrix1: '475',
+  matrix2: '471',
+  aspectosDestacados: '463',
+  sugerenciasMejorar: '464',
+  conclusiones: '467',
+  apellidosJurados: '469',
+  calificacionBasica: '482',
+  calificacionComplementaria: '483',
+  calificacionFinal: '484',
+  premioSugerido: '522'
+};
+
+// Criterios de matrices
+var MATRIX1_CRITERIOS = ['Montaje y complejidad','Pintura e insignias','Resultado global y realismo','Fidelidad histórica o argumental'];
+var MATRIX2_CRITERIOS = ['Montaje y Complejidad','Pintura e insignias','Resultado global y realismo','Fidelidad'];
+
+// Etiquetas de texto para las matrices (el valor numérico interno se mantiene para el cálculo)
+var ETIQUETAS_M1 = {1:'Pobre', 2:'Regular', 3:'Bueno', 4:'Muy bueno', 5:'Excelente'};
+var ETIQUETAS_M2 = {'-1':'Pobre', '0':'Promedio', '1':'Alto'};
+
+// Etapa 1 - Tabla de ponderación fija por criterio (Pobre=1 ... Excelente=5)
+// Índice 0 = Montaje, 1 = Pintura, 2 = Realismo, 3 = Fidelidad
+var TABLA_PONDERACION_M1 = [
+  [6, 14, 21, 26, 29],   // Montaje y complejidad
+  [6, 14, 21, 26, 29],   // Pintura e insignias
+  [3, 10, 16, 21, 24],   // Resultado global y realismo
+  [2, 5, 8, 11, 14]      // Fidelidad histórica o argumental
+];
+
+// Aspectos destacados (qid 463)
+var ASPECTOS_DESTACADOS = [
+  '* Prolijidad general del montaje.',
+  '* Calidad técnica en la aplicación del detallado o detalles agregados.',
+  '* Calidad de aplicación de pintura y/o barnices.',
+  '* Calidad y realismo del weathering.',
+  '* Calidad de aplicación de insignias / identificaciones.',
+  '* Calidad de los enmasacarados.',
+  '* Consistencia en todos los sectores del modelo.',
+  '* Realismo de los detallados o agregados.',
+  '* Composición (Dioramas Sólamente).',
+  '* Historia que cuenta el trabajo  (Dioramas Sólamente).',
+  '* Originalidad de la idea.'
+];
+
+// Sugerencias (qid 464)
+var SUGERENCIAS_MEJORAR = [
+  '* Masillado y/o lijado.',
+  '* Piezas rotas, rayadas, deformadas o faltantes.',
+  '* Prolijidad en la aplicación de pegamento.',
+  '* Alineación de piezas, diedros, ejes, etc.',
+  '* Correcta colocación de piezas.',
+  '* Adaptación de detallados adicionales aplicados.',
+  '* Dilución y/o espesor de pintura y/o barniz.',
+  '* Marcas y/o salpicaduras de pincel, aerógrafo etc.',
+  '* Visualización de soporte de calcomanías.',
+  '* Adaptación de insignias.',
+  '* Enmascaramientos.',
+  '* Homogeneidad de brillos y/o acabados.',
+  '* Limpieza de la superficie (polvo, suciedad, etc).',
+  '* Marcas de dedos o huellas de manipulación.',
+  '* Consistencia en todos los sectores del modelo.',
+  '* Realismo de los detallados o agregados.',
+  '* Realismo de la pintura.',
+  '* Realismo de las insignias.',
+  '* Realismo de la ambientación o weathering.',
+  '* Consistencia con documentación presentada.',
+  '* Consistencia histórico-geográfica.',
+  '* Consistencia argumental.',
+  '* Fidelidad de colores.',
+  '* Fidelidad de insignias o identificaciones.',
+  '* Fidelidad de la configuración, elementos o detallados.',
+  '* Consistencia en la composición (DIORAMAS sólamente).',
+  '* Historia que cuenta el trabajo (DIORAMAS sólamente).'
+];
+
+// ============ STATE ============
+var INPUT_VALUE = '';
+var CURRENT_MODELO = null;          // datos del modelo desde inscripción
+var EXISTING_JUZGAMIENTO = null;    // si ya fue juzgado, contiene la submission
+var GRADO_ACTUAL = null;            // grado vigente para el cálculo de premio y el envío (puede ser recategorizado por el jurado)
+var PIN_INPUT = '';
+var PIN_UNLOCKED = false;
+
+// Etapa 1: Matrix1 (4 criterios × 1-5)
+var M1 = [null, null, null, null];
+// Etapa 2: Matrix2 (4 criterios × -1 a 1)
+var M2 = [null, null, null, null];
+// Aspectos destacados seleccionados
+var ASPECTOS_SEL = [];
+var ASPECTOS_OTRO = '';
+// Sugerencias seleccionadas
+var SUGERENCIAS_SEL = [];
+var SUGERENCIAS_OTRO = '';
+// Conclusiones
+var CONCLUSIONES = '';
+var APELLIDOS = '';
+
+// ============ HELPERS ============
+function getAns(a){
+  if(!a) return '';
+  if(typeof a.answer === 'string') return a.answer;
+  if(a.answer && typeof a.answer === 'object'){
+    if(a.answer.first || a.answer.last){
+      return ((a.answer.last||'') + ' ' + (a.answer.first||'')).trim();
+    }
+    if(a.answer.full) return a.answer.full;
+  }
+  if(a.prettyFormat) return a.prettyFormat;
+  return '';
+}
+
+function escapeHTML(s){
+  return String(s||'').replace(/[&<>"']/g, function(c){
+    return ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c];
+  });
+}
+
+function goScreen(name){
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById('s-' + name).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function showLoader(text){
+  document.getElementById('loaderText').textContent = text || 'Cargando…';
+  document.getElementById('loader').classList.add('show');
+}
+function hideLoader(){
+  document.getElementById('loader').classList.remove('show');
+}
+
+// ============ MODAL ============
+function showModal(title, body, type, actions){
+  var modal = document.getElementById('modal');
+  var card = document.getElementById('modalCard');
+  card.className = 'modal-card' + (type==='error'?' error':type==='warn'?' warn':'');
+  document.getElementById('modalIcon').textContent = type==='error'?'!':type==='warn'?'⚠':'i';
+  document.getElementById('modalTitle').innerHTML = title;
+  document.getElementById('modalBody').innerHTML = body;
+  // Actions
+  var actDiv = document.getElementById('modalActions');
+  actDiv.innerHTML = '';
+  if(actions && actions.length){
+    actions.forEach(function(a){
+      var b = document.createElement('button');
+      b.className = 'btn-big ' + (a.style || 'primary');
+      b.textContent = a.label;
+      b.onclick = function(){ closeModal(); if(a.onClick) a.onClick(); };
+      actDiv.appendChild(b);
+    });
+  } else {
+    var b = document.createElement('button');
+    b.className = 'btn-big primary';
+    b.textContent = 'Aceptar';
+    b.onclick = closeModal;
+    actDiv.appendChild(b);
+  }
+  modal.classList.add('show');
+}
+function closeModal(){ document.getElementById('modal').classList.remove('show'); }
+
+// ============ NUMPAD ============
+function buildNumpad(){
+  var pad = document.getElementById('numpad');
+  pad.innerHTML = '';
+  var keys = ['1','2','3','4','5','6','7','8','9','','0',''];
+  keys.forEach(function(k){
+    var btn = document.createElement('button');
+    btn.className = 'key';
+    if(!k){ btn.style.visibility = 'hidden'; }
+    btn.textContent = k;
+    btn.onclick = function(){ if(k) appendDigit(k); };
+    pad.appendChild(btn);
+  });
+}
+
+function appendDigit(d){
+  if(INPUT_VALUE.length >= 5) return;
+  INPUT_VALUE += d;
+  updateDisplay();
+}
+
+function clearInput(){
+  INPUT_VALUE = '';
+  updateDisplay();
+}
+
+function updateDisplay(){
+  var el = document.getElementById('inputDisplay');
+  if(INPUT_VALUE === ''){
+    el.classList.add('empty');
+    el.textContent = '0';
+  } else {
+    el.classList.remove('empty');
+    el.innerHTML = '<span class="hash">#</span>' + INPUT_VALUE;
+  }
+  document.getElementById('btnSearch').disabled = INPUT_VALUE.length === 0;
+}
+
+// ============ SEARCH (consulta JotForm inscripción + check juzgamiento previo) ============
+function doSearch(){
+  if(INPUT_VALUE === '') return;
+  showLoader('Buscando modelo…');
+  document.getElementById('btnSearch').disabled = true;
+
+  var raw = INPUT_VALUE;
+  var primaryKey = raw.padStart(3,'0');
+
+  searchInscripcionByOrden(primaryKey).then(function(found){
+    if(found){ return found; }
+    if(raw !== primaryKey){
+      return searchInscripcionByOrden(raw).then(function(f2){
+        if(f2) return f2;
+        var stripped = raw.replace(/^0+/,'') || '0';
+        if(stripped !== raw && stripped !== primaryKey){
+          return searchInscripcionByOrden(stripped);
+        }
+        return null;
+      });
+    }
+    return null;
+  }).then(function(modelo){
+    if(!modelo){
+      hideLoader();
+      document.getElementById('btnSearch').disabled = false;
+      showModal('Modelo <em>no encontrado</em>',
+        'No existe el modelo <strong>#'+escapeHTML(INPUT_VALUE)+'</strong> en las inscripciones.<br>Verificá el número e intentá de nuevo.',
+        'error');
+      return;
+    }
+    CURRENT_MODELO = modelo;
+    // Ahora verificamos si ya fue juzgado
+    return checkJuzgamientoExistente(modelo.orden).then(function(existing){
+      hideLoader();
+      document.getElementById('btnSearch').disabled = false;
+      if(existing && !PIN_UNLOCKED){
+        EXISTING_JUZGAMIENTO = existing;
+        showPinModal();
+        return;
+      }
+      EXISTING_JUZGAMIENTO = existing; // puede ser null o, con PIN, contener la submission
+      mostrarConfirmModelo();
+    });
+  }).catch(function(err){
+    hideLoader();
+    document.getElementById('btnSearch').disabled = false;
+    console.error('Error búsqueda:', err);
+    showModal('Error de <em>conexión</em>',
+      'No pudimos conectarnos a la base de datos.<br>Verificá internet e intentá de nuevo.',
+      'error');
+  });
+}
+
+function searchInscripcionByOrden(ordenStr){
+  var filterObj = { 'q448:eq': ordenStr, 'status': 'ACTIVE' };
+  return jfCall('get', '/form/'+JOTFORM_FORM_INSCRIPCION+'/submissions', {limit:5, filter: JSON.stringify(filterObj)}).then(function(d){
+    if(d.responseCode !== 200) throw new Error(d.message||'API error');
+    var subs = d.content || [];
+    if(subs.length === 0) return null;
+    return parseInscripcion(subs[0]);
+  });
+}
+
+function parseInscripcion(sub){
+  var a = sub.answers || {};
+  return {
+    submissionID: sub.id,
+    orden: getAns(a[QID_INSCR.orden]) || '',
+    nombreModelo: getAns(a[QID_INSCR.nombreModelo]) || '(sin nombre)',
+    // apellidoNombre intencionalmente omitido: el juzgamiento debe ser anónimo
+    grado: getAns(a[QID_INSCR.grado]) || '',
+    categoria: getAns(a[QID_INSCR.categoria]) || '',
+    subAviacion: getAns(a[QID_INSCR.subAviacion]) || '',
+    subMilitaria: getAns(a[QID_INSCR.subMilitaria]) || '',
+    subCiviles: getAns(a[QID_INSCR.subCiviles]) || '',
+    subNavales: getAns(a[QID_INSCR.subNavales]) || '',
+    subFiguras: getAns(a[QID_INSCR.subFiguras]) || '',
+    subDioramas: getAns(a[QID_INSCR.subDioramas]) || '',
+    subScratch: getAns(a[QID_INSCR.subScratch]) || '',
+    subFantasia: getAns(a[QID_INSCR.subFantasia]) || '',
+    subFFAA: getAns(a[QID_INSCR.subFFAA]) || '',
+    escala: getAns(a[QID_INSCR.escala]) || '',
+    documentacion: getAns(a[QID_INSCR.documentacion]) || '',
+    adjuntoCincopa: getAns(a[QID_INSCR.adjuntoCincopa]) || ''
+  };
+}
+
+// Devuelve la subcategoría no vacía (solo una está completa)
+function getSubcategoria(m){
+  return m.subAviacion || m.subMilitaria || m.subCiviles || m.subNavales ||
+         m.subFiguras || m.subDioramas || m.subScratch || m.subFantasia ||
+         m.subFFAA || '';
+}
+
+function checkJuzgamientoExistente(orden){
+  var ordenStr = String(orden).replace(/^0+/,'') || orden;
+  // El qid del orden en juzgamiento es 488 — pero el valor guardado puede tener formato distinto
+  // Intentamos buscar por valor
+  var filterObj = { ['q' + QID_JUZG.orden + ':eq']: ordenStr };
+  return jfCall('get', '/form/'+JOTFORM_FORM_JUZGAMIENTO+'/submissions', {limit:5, filter: JSON.stringify(filterObj)}).then(function(d){
+    if(d.responseCode !== 200) return null;
+    var subs = d.content || [];
+    // Filtrar solo submissions ACTIVE (no eliminadas)
+    var active = subs.filter(function(s){ return s.status !== 'DELETED' && s.status !== 'OVERQUOTA'; });
+    if(active.length === 0) return null;
+    var s = active[0];
+    var a = s.answers || {};
+    return {
+      submissionID: s.id,
+      apellidosJurados: getAns(a[QID_JUZG.apellidosJurados]) || ''
+    };
+  }).catch(function(err){
+    console.warn('Error chequeo juzgamiento previo:', err);
+    return null;
+  });
+}
+
+// ============ PIN MODAL ============
+function showPinModal(){
+  PIN_INPUT = '';
+  updatePinDisplay();
+  buildPinNumpad();
+  document.getElementById('pinBody').innerHTML =
+    'Este modelo ya fue juzgado por:<br><strong>' + escapeHTML(EXISTING_JUZGAMIENTO.apellidosJurados || '(sin firma)') + '</strong><br><br>' +
+    'Para modificar el juzgamiento, ingresá el <strong>PIN de organizador</strong>.';
+  document.getElementById('modalPin').classList.add('show');
+}
+function closePinModal(){
+  document.getElementById('modalPin').classList.remove('show');
+}
+function buildPinNumpad(){
+  var pad = document.getElementById('pinNumpad');
+  pad.innerHTML = '';
+  var keys = ['1','2','3','4','5','6','7','8','9','←','0','✓'];
+  keys.forEach(function(k){
+    var btn = document.createElement('button');
+    btn.className = 'key';
+    btn.textContent = k;
+    if(k==='←'){
+      btn.onclick = function(){ PIN_INPUT = PIN_INPUT.slice(0,-1); updatePinDisplay(); };
+    } else if(k==='✓'){
+      btn.onclick = verifyPin;
+    } else {
+      btn.onclick = function(){ if(PIN_INPUT.length<6){ PIN_INPUT += k; updatePinDisplay(); } };
+    }
+    pad.appendChild(btn);
+  });
+}
+function updatePinDisplay(){
+  var el = document.getElementById('pinDisplay');
+  if(PIN_INPUT.length === 0){
+    el.textContent = '····';
+    el.classList.add('empty');
+  } else {
+    el.classList.remove('empty');
+    el.textContent = '*'.repeat(PIN_INPUT.length);
+  }
+}
+function verifyPin(){
+  if(PIN_INPUT === PIN_ORGANIZADOR){
+    PIN_UNLOCKED = true;
+    closePinModal();
+    mostrarConfirmModelo();
+  } else {
+    PIN_INPUT = '';
+    updatePinDisplay();
+    showModal('PIN <em>incorrecto</em>','El PIN ingresado no es correcto. Intentá de nuevo.','error');
+  }
+}
+
+// ============ CONFIRM MODEL ============
+function mostrarConfirmModelo(){
+  var m = CURRENT_MODELO;
+  var ordenClean = m.orden.replace(/^0+/,'') || m.orden;
+  document.getElementById('cfOrden').textContent = ordenClean;
+  document.getElementById('cfNombre').textContent = m.nombreModelo;
+  document.getElementById('tbOrden').textContent = ordenClean;
+
+  var data = document.getElementById('cfData');
+  data.innerHTML = '';
+  function row(label, value, extraClass){
+    if(!value || !value.trim()) return;
+    var div = document.createElement('div');
+    div.className = 'confirm-data-row';
+    var valueClass = 'confirm-data-value' + (extraClass ? ' ' + extraClass : '');
+    div.innerHTML = '<span class="confirm-data-label">'+escapeHTML(label)+'</span><span class="'+valueClass+'">'+escapeHTML(value)+'</span>';
+    data.appendChild(div);
+  }
+  row('Grado', m.grado, 'confirm-data-value-grado');
+  row('Categoría', m.categoria);
+  row('Subcategoría', getSubcategoria(m));
+  row('Escala', m.escala);
+  row('Documentación', m.documentacion);
+
+  // Botón de documentación si el modelo declara tener docs (campo qid 376 = "SI...")
+  // El consultor v6 se encarga internamente si no hay archivo adjunto subido
+  var docTxt = (m.documentacion || '').toUpperCase();
+  var hasDoc = docTxt.indexOf('SI') >= 0 || docTxt.indexOf('SÍ') >= 0;
+  document.getElementById('btnVerDoc').style.display = hasDoc ? '' : 'none';
+
+  // Reset state del juzgamiento (en caso de venir de otro flujo)
+  resetJuzgamientoState();
+
+  // Si veníamos de "modelo ya juzgado" con PIN, podemos pre-cargar datos pero por ahora dejamos vacío
+  // (futura mejora: cargar datos previos para editarlos)
+
+  goScreen('confirm');
+}
+
+function resetJuzgamientoState(){
+  M1 = [null, null, null, null];
+  M2 = [null, null, null, null];
+  ASPECTOS_SEL = [];
+  ASPECTOS_OTRO = '';
+  SUGERENCIAS_SEL = [];
+  SUGERENCIAS_OTRO = '';
+  CONCLUSIONES = '';
+  APELLIDOS = '';
+}
+
+// ============ DOC VIEWER (iframe Cincopa) ============
+function abrirDocViewer(){
+  var m = CURRENT_MODELO;
+  if(!m) return;
+  var ordenClean = m.orden.replace(/^0+/,'') || m.orden;
+  document.getElementById('tbDocOrden').textContent = ordenClean;
+  // Cargar el consultor con el orden pre-seteado, y decirle a dónde volver
+  // cuando el jurado toque "Nueva consulta" (en vez de ir a la búsqueda
+  // propia del visor). Usamos la URL actual de esta misma app (sin query
+  // string) — así funciona sin importar en qué dominio termine publicada.
+  var returnUrl = window.location.href.split('#')[0].split('?')[0];
+  var src = URL_CONSULTOR_DOCS +
+    '?orden=' + encodeURIComponent(ordenClean) +
+    '&returnUrl=' + encodeURIComponent(returnUrl) +
+    '&returnLabel=' + encodeURIComponent('Volver a juzgamiento');
+  document.getElementById('docIframe').src = src;
+  goScreen('doc-viewer');
+}
+
+// ============ ETAPA 1 ============
+function goEtapa1(){
+  syncTopbar('1');
+  buildMatrix1();
+  updateM1Score();
+  goScreen('etapa1');
+}
+function syncTopbar(prefix){
+  var ordenClean = CURRENT_MODELO.orden.replace(/^0+/,'') || CURRENT_MODELO.orden;
+  ['tb1','tb2','tbA','tbS','tbC','tbR'].forEach(function(p){
+    var elO = document.getElementById(p+'Orden');
+    var elM = document.getElementById(p+'Modelo');
+    if(elO) elO.textContent = ordenClean;
+    if(elM) elM.textContent = CURRENT_MODELO.nombreModelo;
+  });
+}
+function buildMatrix1(){
+  var container = document.getElementById('matrix1');
+  container.innerHTML = '';
+  MATRIX1_CRITERIOS.forEach(function(crit, idx){
+    var row = document.createElement('div');
+    row.className = 'matrix-row';
+    var label = document.createElement('div');
+    label.className = 'matrix-row-label';
+    label.textContent = crit;
+    row.appendChild(label);
+    var opts = document.createElement('div');
+    opts.className = 'matrix-options';
+    for(var v=1; v<=5; v++){
+      var opt = document.createElement('div');
+      opt.className = 'matrix-opt empty';
+      opt.dataset.row = idx;
+      opt.dataset.value = v;
+      opt.textContent = ETIQUETAS_M1[v];
+      opt.onclick = (function(rowIdx, val){
+        return function(){ setM1(rowIdx, val); };
+      })(idx, v);
+      opts.appendChild(opt);
+    }
+    row.appendChild(opts);
+    container.appendChild(row);
+  });
+}
+function setM1(rowIdx, val){
+  M1[rowIdx] = val;
+  // Repintar fila
+  var container = document.getElementById('matrix1');
+  var rows = container.querySelectorAll('.matrix-row');
+  var row = rows[rowIdx];
+  if(row){
+    row.querySelectorAll('.matrix-opt').forEach(function(o){
+      o.classList.remove('selected','empty');
+      if(parseInt(o.dataset.value) === val) o.classList.add('selected');
+      else o.classList.add('empty');
+    });
+  }
+  updateM1Score();
+}
+function updateM1Score(){
+  var sumaCruda = M1.reduce(function(acc,v){ return acc + (v||0); }, 0);
+  document.getElementById('m1Suma').textContent = sumaCruda;
+  var allFilled = M1.every(function(v){ return v !== null; });
+  if(allFilled){
+    var basica = calcBasica(M1);
+    document.getElementById('m1Calc').textContent = basica;
+    document.getElementById('m1Calc').classList.remove('error');
+    document.getElementById('btnEtapa1Next').disabled = false;
+  } else {
+    document.getElementById('m1Calc').textContent = '—';
+    document.getElementById('btnEtapa1Next').disabled = true;
+  }
+}
+
+// ============ ETAPA 2 ============
+function goEtapa2(){
+  if(!M1.every(function(v){ return v !== null; })) return;
+  syncTopbar('2');
+  buildMatrix2();
+  updateM2Score();
+  goScreen('etapa2');
+}
+function buildMatrix2(){
+  var container = document.getElementById('matrix2');
+  container.innerHTML = '';
+  MATRIX2_CRITERIOS.forEach(function(crit, idx){
+    var row = document.createElement('div');
+    row.className = 'matrix-row';
+    var label = document.createElement('div');
+    label.className = 'matrix-row-label';
+    label.textContent = crit;
+    row.appendChild(label);
+    var opts = document.createElement('div');
+    opts.className = 'matrix-options';
+    for(var v=-1; v<=1; v++){
+      var opt = document.createElement('div');
+      opt.className = 'matrix-opt empty';
+      opt.dataset.row = idx;
+      opt.dataset.value = v;
+      opt.textContent = ETIQUETAS_M2[v];
+      opt.onclick = (function(rowIdx, val){
+        return function(){ setM2(rowIdx, val); };
+      })(idx, v);
+      if(M2[idx] === v){ opt.classList.remove('empty'); opt.classList.add('selected'); }
+      opts.appendChild(opt);
+    }
+    row.appendChild(opts);
+    container.appendChild(row);
+  });
+}
+function setM2(rowIdx, val){
+  M2[rowIdx] = val;
+  var container = document.getElementById('matrix2');
+  var rows = container.querySelectorAll('.matrix-row');
+  var row = rows[rowIdx];
+  if(row){
+    row.querySelectorAll('.matrix-opt').forEach(function(o){
+      o.classList.remove('selected','empty');
+      if(parseInt(o.dataset.value) === val) o.classList.add('selected');
+      else o.classList.add('empty');
+    });
+  }
+  updateM2Score();
+}
+function updateM2Score(){
+  var basica = calcBasica(M1);
+  var compl = calcComplementaria(M2);
+  document.getElementById('m2Basica').textContent = basica;
+  var allFilled = M2.every(function(v){ return v !== null; });
+  if(allFilled){
+    document.getElementById('m2Comp').textContent = compl;
+    var final = basica + compl;
+    document.getElementById('m2Final').textContent = final;
+    var premio = calcPremio(final, CURRENT_MODELO.grado);
+    document.getElementById('m2Premio').textContent = premio;
+    document.getElementById('btnEtapa2Next').disabled = false;
+  } else {
+    document.getElementById('m2Comp').textContent = '—';
+    document.getElementById('m2Final').textContent = '—';
+    document.getElementById('m2Premio').textContent = '—';
+    document.getElementById('btnEtapa2Next').disabled = true;
+  }
+}
+
+// ============ FÓRMULAS ============
+function calcBasica(m1){
+  if(m1.some(function(v){ return v === null; })) return 0;
+  // Suma de valores fijos de la tabla de ponderación (no es cálculo aritmético,
+  // es un lookup: cada criterio+calificación mapea a un número fijo predefinido)
+  var total = 0;
+  for(var i=0; i<m1.length; i++){
+    total += TABLA_PONDERACION_M1[i][m1[i]-1];
+  }
+  return total;
+}
+function calcComplementaria(m2){
+  if(m2.some(function(v){ return v === null; })) return 0;
+  // (m + p + r + f)  -- cada criterio en escala -1 a 1, sin multiplicador
+  // (rango -4 a +4, para que Básica[17–96] + Complementaria[-4–+4] = máx. 100)
+  return (m2[0] + m2[1] + m2[2] + m2[3]);
+}
+function calcPremio(final, grado){
+  var g = (grado || '').toLowerCase();
+  if(g.indexOf('master') >= 0){
+    // Confirmado: MASTER usa los mismos cortes que "General de Concurso" — la recategorización
+    // a MASTER es subjetiva (decisión del jurado), no cambia la escala de puntaje.
+    if(final >= 85) return '1° PREMIO';
+    if(final >= 75) return '2° PREMIO';
+    if(final >= 65) return '3° PREMIO';
+    return 'SIN PREMIO';
+  }
+  if(g.indexOf('general') >= 0){
+    if(final >= 85) return '1° PREMIO';
+    if(final >= 75) return '2° PREMIO';
+    if(final >= 65) return '3° PREMIO';
+    return 'SIN PREMIO';
+  }
+  if(g.indexOf('promocional') >= 0){
+    if(final >= 55) return '1° PREMIO';
+    if(final >= 45) return '2° PREMIO';
+    if(final >= 35) return '3° PREMIO';
+    return 'SIN PREMIO';
+  }
+  if(g.indexOf('junior') >= 0){
+    if(final >= 45) return '1° PREMIO';
+    if(final >= 35) return '2° PREMIO';
+    if(final >= 25) return '3° PREMIO';
+    return 'SIN PREMIO';
+  }
+  // Default: General
+  if(final >= 85) return '1° PREMIO';
+  if(final >= 75) return '2° PREMIO';
+  if(final >= 65) return '3° PREMIO';
+  return 'SIN PREMIO';
+}
+
+// Normaliza el texto de grado que viene de inscripción a una de las 4 opciones del dropdown
+function normalizeGrado(raw){
+  var g = (raw || '').toLowerCase();
+  if(g.indexOf('master') >= 0) return 'Master';
+  if(g.indexOf('general') >= 0) return 'General de Concurso';
+  if(g.indexOf('promocional') >= 0) return 'Promocional';
+  if(g.indexOf('junior') >= 0) return 'Junior';
+  return 'General de Concurso';
+}
+
+// Se dispara cuando el jurado cambia el dropdown "Grado de Concurso" en la pantalla de revisión
+function onGradoOverrideChange(){
+  GRADO_ACTUAL = document.getElementById('fldGradoOverride').value;
+  var basica = calcBasica(M1);
+  var compl = calcComplementaria(M2);
+  var final = basica + compl;
+  var premio = calcPremio(final, GRADO_ACTUAL);
+  document.getElementById('rvPremio').textContent = premio;
+}
+
+// ============ ASPECTOS DESTACADOS ============
+function goAspectos(){
+  if(!M2.every(function(v){ return v !== null; })) return;
+  syncTopbar('A');
+  buildAspectosList();
+  goScreen('aspectos');
+}
+function buildAspectosList(){
+  var container = document.getElementById('aspectosList');
+  container.innerHTML = '';
+  ASPECTOS_DESTACADOS.forEach(function(item, idx){
+    var div = document.createElement('div');
+    div.className = 'check-item' + (ASPECTOS_SEL.indexOf(item) >= 0 ? ' checked' : '');
+    div.onclick = function(){ toggleAspecto(item, div); };
+    div.innerHTML = '<div class="check-box"></div><div class="check-label">'+escapeHTML(item)+'</div>';
+    container.appendChild(div);
+  });
+  // "Otro"
+  var divOther = document.createElement('div');
+  divOther.className = 'check-item' + (ASPECTOS_OTRO ? ' checked' : '');
+  divOther.innerHTML = '<div class="check-box"></div><div style="flex:1"><div class="check-label">Otro</div>' +
+    '<input type="text" class="check-other-input" placeholder="Escribí otro aspecto..." maxlength="150" value="'+escapeHTML(ASPECTOS_OTRO)+'" onclick="event.stopPropagation()" oninput="ASPECTOS_OTRO=this.value;updateAspectosUI()">' +
+    '</div>';
+  divOther.onclick = function(e){
+    if(e.target.tagName === 'INPUT') return;
+    var nowChecked = !divOther.classList.contains('checked');
+    if(nowChecked){
+      // Activar "Otro": chequear límite
+      var totalSeleccionado = ASPECTOS_SEL.length + (ASPECTOS_OTRO.trim() ? 1 : 0);
+      if(totalSeleccionado >= 3){
+        if(navigator.vibrate) navigator.vibrate(60);
+        flashCounterFull('aspectos');
+        return;
+      }
+      divOther.classList.add('checked');
+    } else {
+      divOther.classList.remove('checked');
+      ASPECTOS_OTRO = '';
+      var inp = divOther.querySelector('input');
+      if(inp) inp.value = '';
+    }
+    updateAspectosUI();
+  };
+  container.appendChild(divOther);
+  updateAspectosUI();
+}
+function toggleAspecto(item, div){
+  var idx = ASPECTOS_SEL.indexOf(item);
+  if(idx >= 0){
+    // Deseleccionar siempre es OK
+    ASPECTOS_SEL.splice(idx,1);
+    div.classList.remove('checked');
+  } else {
+    // Antes de agregar, chequear límite
+    var totalSeleccionado = ASPECTOS_SEL.length + (ASPECTOS_OTRO.trim() ? 1 : 0);
+    if(totalSeleccionado >= 3){
+      // Vibra suave para feedback
+      if(navigator.vibrate) navigator.vibrate(60);
+      // Aviso breve sin modal grande, más fluido
+      flashCounterFull('aspectos');
+      return;
+    }
+    ASPECTOS_SEL.push(item);
+    div.classList.add('checked');
+  }
+  updateAspectosUI();
+}
+
+// ============ SUGERENCIAS ============
+function goSugerencias(){
+  syncTopbar('S');
+  buildSugerenciasList();
+  goScreen('sugerencias');
+}
+function buildSugerenciasList(){
+  var container = document.getElementById('sugerenciasList');
+  container.innerHTML = '';
+  SUGERENCIAS_MEJORAR.forEach(function(item, idx){
+    var div = document.createElement('div');
+    div.className = 'check-item' + (SUGERENCIAS_SEL.indexOf(item) >= 0 ? ' checked' : '');
+    div.onclick = function(){ toggleSugerencia(item, div); };
+    div.innerHTML = '<div class="check-box"></div><div class="check-label">'+escapeHTML(item)+'</div>';
+    container.appendChild(div);
+  });
+  // "Otro"
+  var divOther = document.createElement('div');
+  divOther.className = 'check-item' + (SUGERENCIAS_OTRO ? ' checked' : '');
+  divOther.innerHTML = '<div class="check-box"></div><div style="flex:1"><div class="check-label">Otro</div>' +
+    '<input type="text" class="check-other-input" placeholder="Escribí otra sugerencia..." maxlength="150" value="'+escapeHTML(SUGERENCIAS_OTRO)+'" onclick="event.stopPropagation()" oninput="SUGERENCIAS_OTRO=this.value;updateSugerenciasUI()">' +
+    '</div>';
+  divOther.onclick = function(e){
+    if(e.target.tagName === 'INPUT') return;
+    var nowChecked = !divOther.classList.contains('checked');
+    if(nowChecked){
+      var totalSeleccionado = SUGERENCIAS_SEL.length + (SUGERENCIAS_OTRO.trim() ? 1 : 0);
+      if(totalSeleccionado >= 3){
+        if(navigator.vibrate) navigator.vibrate(60);
+        flashCounterFull('sugerencias');
+        return;
+      }
+      divOther.classList.add('checked');
+    } else {
+      divOther.classList.remove('checked');
+      SUGERENCIAS_OTRO = '';
+      var inp = divOther.querySelector('input');
+      if(inp) inp.value = '';
+    }
+    updateSugerenciasUI();
+  };
+  container.appendChild(divOther);
+  updateSugerenciasUI();
+}
+function toggleSugerencia(item, div){
+  var idx = SUGERENCIAS_SEL.indexOf(item);
+  if(idx >= 0){
+    SUGERENCIAS_SEL.splice(idx,1);
+    div.classList.remove('checked');
+  } else {
+    var totalSeleccionado = SUGERENCIAS_SEL.length + (SUGERENCIAS_OTRO.trim() ? 1 : 0);
+    if(totalSeleccionado >= 3){
+      if(navigator.vibrate) navigator.vibrate(60);
+      flashCounterFull('sugerencias');
+      return;
+    }
+    SUGERENCIAS_SEL.push(item);
+    div.classList.add('checked');
+  }
+  updateSugerenciasUI();
+}
+
+// ============ CONCLUSIONES ============
+function goConclusiones(){
+  syncTopbar('C');
+  document.getElementById('fldConclusiones').value = CONCLUSIONES;
+  document.getElementById('fldApellidos').value = APELLIDOS;
+  updateConclusionesCounter();
+  goScreen('conclusiones');
+}
+function updateConclusionesCounter(){
+  var v = document.getElementById('fldConclusiones').value;
+  document.getElementById('conclusionesCounter').textContent = v.length + '/80';
+}
+
+// ============ REVIEW ============
+function goReview(){
+  CONCLUSIONES = document.getElementById('fldConclusiones').value.trim();
+  APELLIDOS = document.getElementById('fldApellidos').value.trim();
+
+  if(!APELLIDOS){
+    showModal('Datos <em>incompletos</em>',
+      'Por favor, ingresá los <strong>apellidos de los jurados</strong> antes de continuar.',
+      'warn');
+    return;
+  }
+
+  syncTopbar('R');
+  GRADO_ACTUAL = normalizeGrado(CURRENT_MODELO.grado);
+  var gradoSel = document.getElementById('fldGradoOverride');
+  if(gradoSel) gradoSel.value = GRADO_ACTUAL;
+  var basica = calcBasica(M1);
+  var compl = calcComplementaria(M2);
+  var final = basica + compl;
+  var premio = calcPremio(final, GRADO_ACTUAL);
+  document.getElementById('rvBasica').textContent = basica;
+  document.getElementById('rvComp').textContent = compl;
+  document.getElementById('rvFinal').textContent = final;
+  document.getElementById('rvPremio').textContent = premio;
+
+  // Aspectos
+  var aEl = document.getElementById('rvAspectos');
+  var aList = ASPECTOS_SEL.slice();
+  if(ASPECTOS_OTRO) aList.push(ASPECTOS_OTRO);
+  if(aList.length){
+    aEl.innerHTML = aList.map(function(x){
+      return '<div class="review-list-item">'+escapeHTML(x)+'</div>';
+    }).join('');
+  } else {
+    aEl.innerHTML = '<em style="opacity:.5">(ninguno seleccionado)</em>';
+  }
+
+  // Sugerencias
+  var sEl = document.getElementById('rvSugerencias');
+  var sList = SUGERENCIAS_SEL.slice();
+  if(SUGERENCIAS_OTRO) sList.push(SUGERENCIAS_OTRO);
+  if(sList.length){
+    sEl.innerHTML = sList.map(function(x){
+      return '<div class="review-list-item">'+escapeHTML(x)+'</div>';
+    }).join('');
+  } else {
+    sEl.innerHTML = '<em style="opacity:.5">(ninguno seleccionado)</em>';
+  }
+
+  // Conclusiones
+  var cEl = document.getElementById('rvConclusiones');
+  cEl.textContent = CONCLUSIONES || '(sin comentarios)';
+  if(!CONCLUSIONES) cEl.innerHTML = '<em style="opacity:.5">(sin comentarios)</em>';
+
+  // Apellidos
+  document.getElementById('rvApellidos').textContent = APELLIDOS;
+
+  goScreen('review');
+}
+
+// ============ BACKUP LOCAL (para no perder datos si falla el envío) ============
+var BACKUP_KEY = 'bamf_juzg_pending_v1';
+
+function guardarBackupLocal(payload){
+  try{ localStorage.setItem(BACKUP_KEY, JSON.stringify(payload)); }
+  catch(e){ console.warn('No se pudo guardar backup local:', e); }
+}
+function borrarBackupLocal(){
+  try{ localStorage.removeItem(BACKUP_KEY); }catch(e){}
+}
+function leerBackupLocal(){
+  try{
+    var raw = localStorage.getItem(BACKUP_KEY);
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){ return null; }
+}
+
+function construirFormFields(m, gradoFinal, m1, m2, aspectosArr, sugerenciasArr, conclusiones, apellidos, basica, compl, final, premio, ordenClean){
+  var fields = [];
+  function add(qid, val){ fields.push(['submission['+qid+']', val]); }
+  add(QID_JUZG.orden, ordenClean);
+  add(QID_JUZG.grado, gradoFinal);
+  add(QID_JUZG.nombreModelo, m.nombreModelo);
+  add(QID_JUZG.categoria, m.categoria);
+  add(QID_JUZG.subAviacion, m.subAviacion);
+  add(QID_JUZG.subMilitaria, m.subMilitaria);
+  add(QID_JUZG.subCiviles, m.subCiviles);
+  add(QID_JUZG.subNavales, m.subNavales);
+  add(QID_JUZG.subFiguras, m.subFiguras);
+  add(QID_JUZG.subDioramas, m.subDioramas);
+  add(QID_JUZG.subScratch, m.subScratch);
+  add(QID_JUZG.subFantasia, m.subFantasia);
+  add(QID_JUZG.subFFAA, m.subFFAA);
+  add(QID_JUZG.documentacion, m.documentacion);
+  m1.forEach(function(v, idx){ fields.push(['submission['+QID_JUZG.matrix1+']['+idx+']', String(v)]); });
+  m2.forEach(function(v, idx){ fields.push(['submission['+QID_JUZG.matrix2+']['+idx+']', String(v)]); });
+  aspectosArr.forEach(function(item){ fields.push(['submission['+QID_JUZG.aspectosDestacados+'][]', item]); });
+  sugerenciasArr.forEach(function(item){ fields.push(['submission['+QID_JUZG.sugerenciasMejorar+'][]', item]); });
+  add(QID_JUZG.conclusiones, conclusiones);
+  add(QID_JUZG.apellidosJurados, apellidos);
+  add(QID_JUZG.calificacionBasica, String(basica));
+  add(QID_JUZG.calificacionComplementaria, String(compl));
+  add(QID_JUZG.calificacionFinal, String(final));
+  add(QID_JUZG.premioSugerido, premio);
+  return fields;
+}
+
+// ============ ENVIAR JUZGAMIENTO ============
+function enviarJuzgamiento(){
+  showLoader('Enviando juzgamiento…');
+  document.getElementById('btnEnviar').disabled = true;
+
+  var basica = calcBasica(M1);
+  var compl = calcComplementaria(M2);
+  var final = basica + compl;
+  var gradoFinal = GRADO_ACTUAL || normalizeGrado(CURRENT_MODELO.grado);
+  var premio = calcPremio(final, gradoFinal);
+
+  var m = CURRENT_MODELO;
+  var ordenClean = m.orden.replace(/^0+/,'') || m.orden;
+
+  // Combinar aspectos + "Otro"
+  var aspectosArr = ASPECTOS_SEL.slice();
+  if(ASPECTOS_OTRO) aspectosArr.push(ASPECTOS_OTRO);
+  var sugerenciasArr = SUGERENCIAS_SEL.slice();
+  if(SUGERENCIAS_OTRO) sugerenciasArr.push(SUGERENCIAS_OTRO);
+
+  var formFields = construirFormFields(m, gradoFinal, M1, M2, aspectosArr, sugerenciasArr, CONCLUSIONES, APELLIDOS, basica, compl, final, premio, ordenClean);
+
+  // Si estamos editando uno existente (PIN_UNLOCKED), el ID a borrar (recién DESPUÉS de
+  // confirmar que el nuevo se guardó bien — así nunca nos quedamos sin ninguno de los dos).
+  var deleteId = (PIN_UNLOCKED && EXISTING_JUZGAMIENTO && EXISTING_JUZGAMIENTO.submissionID)
+    ? EXISTING_JUZGAMIENTO.submissionID : null;
+
+  // Backup local: si el envío falla o el celular se cierra/pierde señal, esto permite
+  // reintentar sin que el jurado tenga que volver a cargar todo el juzgamiento.
+  guardarBackupLocal({
+    ordenClean: ordenClean,
+    premio: premio,
+    formFields: formFields,
+    deleteId: deleteId,
+    timestamp: Date.now()
+  });
+
+  enviarConReintento(formFields, deleteId, ordenClean, premio);
+}
+
+function enviarConReintento(formFields, deleteId, ordenClean, premio){
+  jfCall('post', '/form/'+JOTFORM_FORM_JUZGAMIENTO+'/submissions', {}, formFields)
+    .then(function(d){
+      if(d.responseCode !== 200){
+        throw new Error(d.message || 'JotForm devolvió un error desconocido');
+      }
+      // El juzgamiento nuevo YA está guardado en JotForm — recién ahora borramos el
+      // anterior (si correspondía). Si el borrado falla, no perdimos nada: solo queda
+      // un envío viejo duplicado que se puede limpiar a mano después.
+      var despuesDeBorrar = deleteId
+        ? jfCall('delete', '/submission/'+deleteId, {}, null).catch(function(e){
+            console.warn('No se pudo borrar el juzgamiento anterior (quedó duplicado, revisar manualmente):', e);
+          })
+        : Promise.resolve();
+      return despuesDeBorrar;
+    })
+    .then(function(){
+      hideLoader();
+      borrarBackupLocal();
+      document.getElementById('successOrden').textContent = '#' + ordenClean + '  ·  ' + premio;
+      goScreen('success');
+    })
+    .catch(function(err){
+      hideLoader();
+      document.getElementById('btnEnviar').disabled = false;
+      console.error('Error envío:', err);
+      showModal('Error de <em>conexión</em>',
+        'No pudimos enviar el juzgamiento. Tus datos quedaron guardados en este celular — no hace falta volver a cargar nada.',
+        'error',
+        [
+          { label: 'Reintentar', style: 'primary', onClick: function(){
+              showLoader('Enviando juzgamiento…');
+              enviarConReintento(formFields, deleteId, ordenClean, premio);
+            } },
+          { label: 'Cerrar', style: 'ghost' }
+        ]);
+    });
+}
+
+function deleteSubmissionPrevia(submissionID){
+  return jfCall('delete', '/submission/'+submissionID, {}, null).catch(function(e){
+    console.warn('Error al borrar submission previa:', e);
+    // No bloqueamos el flujo
+    return null;
+  });
+}
+
+// ============ CANCEL / RESTART ============
+function cancelFlow(){
+  showModal('Cancelar <em>juzgamiento</em>',
+    '¿Seguro querés cancelar este juzgamiento?<br>Se perderán los datos cargados.',
+    'warn',
+    [
+      { label: 'No, seguir', style: 'ghost' },
+      { label: 'Sí, cancelar', style: 'danger', onClick: restartFlow }
+    ]);
+}
+function restartFlow(){
+  CURRENT_MODELO = null;
+  EXISTING_JUZGAMIENTO = null;
+  PIN_UNLOCKED = false;
+  PIN_INPUT = '';
+  INPUT_VALUE = '';
+  resetJuzgamientoState();
+  updateDisplay();
+  // Limpiar iframe doc
+  var df = document.getElementById('docIframe');
+  if(df) df.src = 'about:blank';
+  goScreen('welcome');
+}
+
+// ============ KEYBOARD ============
+document.addEventListener('keydown', function(e){
+  if(document.getElementById('s-welcome').classList.contains('active')){
+    if(e.key >= '0' && e.key <= '9') appendDigit(e.key);
+    else if(e.key === 'Backspace'){ INPUT_VALUE = INPUT_VALUE.slice(0,-1); updateDisplay(); }
+    else if(e.key === 'Enter') doSearch();
+    else if(e.key === 'Escape') clearInput();
+  }
+});
+
+// ============ UI HELPERS para contador de selección ============
+function updateAspectosUI(){
+  var total = ASPECTOS_SEL.length + (ASPECTOS_OTRO.trim() ? 1 : 0);
+  var el = document.getElementById('aspectosCounter');
+  if(el){
+    el.textContent = total + ' de 3 seleccionados';
+    el.classList.toggle('full', total >= 3);
+  }
+  // Marcar como disabled los items NO seleccionados si llegamos a 3
+  var container = document.getElementById('aspectosList');
+  if(!container) return;
+  var items = container.querySelectorAll('.check-item');
+  items.forEach(function(it){
+    if(total >= 3 && !it.classList.contains('checked')){
+      it.classList.add('disabled');
+    } else {
+      it.classList.remove('disabled');
+    }
+  });
+}
+
+function updateSugerenciasUI(){
+  var total = SUGERENCIAS_SEL.length + (SUGERENCIAS_OTRO.trim() ? 1 : 0);
+  var el = document.getElementById('sugerenciasCounter');
+  if(el){
+    el.textContent = total + ' de 3 seleccionados';
+    el.classList.toggle('full', total >= 3);
+  }
+  var container = document.getElementById('sugerenciasList');
+  if(!container) return;
+  var items = container.querySelectorAll('.check-item');
+  items.forEach(function(it){
+    if(total >= 3 && !it.classList.contains('checked')){
+      it.classList.add('disabled');
+    } else {
+      it.classList.remove('disabled');
+    }
+  });
+}
+
+// Animar el contador cuando el juez intenta agregar un 4to
+function flashCounterFull(which){
+  var el = document.getElementById(which + 'Counter');
+  if(!el) return;
+  el.classList.add('full');
+  el.textContent = 'Máximo 3 alcanzado — desmarcá uno para cambiar';
+  // Restaurar después de 1.8s
+  setTimeout(function(){
+    var total = (which==='aspectos')
+      ? ASPECTOS_SEL.length + (ASPECTOS_OTRO.trim() ? 1 : 0)
+      : SUGERENCIAS_SEL.length + (SUGERENCIAS_OTRO.trim() ? 1 : 0);
+    el.textContent = total + ' de 3 seleccionados';
+  }, 1800);
+}
+
+// ============ INIT ============
+function init(){
+  buildNumpad();
+  updateDisplay();
+  // Listener para contador de conclusiones
+  var c = document.getElementById('fldConclusiones');
+  if(c) c.addEventListener('input', updateConclusionesCounter);
+  revisarBackupPendiente();
+}
+
+function revisarBackupPendiente(){
+  var backup = leerBackupLocal();
+  if(!backup) return;
+  showModal('Juzgamiento <em>pendiente</em>',
+    'Este celular tiene un juzgamiento del modelo <strong>#'+escapeHTML(backup.ordenClean)+'</strong> que no se pudo confirmar la última vez.<br>¿Reintentamos enviarlo ahora?',
+    'warn',
+    [
+      { label: 'Descartar', style: 'danger', onClick: function(){ borrarBackupLocal(); } },
+      { label: 'Reintentar envío', style: 'primary', onClick: function(){
+          showLoader('Enviando juzgamiento…');
+          enviarConReintento(backup.formFields, backup.deleteId, backup.ordenClean, backup.premio);
+        } }
+    ]);
+}
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
