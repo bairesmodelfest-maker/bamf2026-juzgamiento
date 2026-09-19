@@ -1579,6 +1579,10 @@ function enviarConReintento(formFields, deleteId, ordenClean, premio){
     .then(function(){
       hideLoader();
       borrarBackupLocal();
+      // Reactivamos el botón acá: es el mismo elemento para todos los
+      // modelos, y si no lo reseteamos después de un envío OK, el
+      // próximo modelo se queda con el botón "muerto" sin ningún error.
+      document.getElementById('btnEnviar').disabled = false;
       document.getElementById('successOrden').textContent = '#' + ordenClean + '  ·  ' + premio;
       goScreen('success');
     })
