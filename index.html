@@ -526,7 +526,7 @@ body{font-family:'Fraunces',serif;background:var(--paper);color:var(--ink);-webk
 var JOTFORM_FORM_INSCRIPCION = '240386129030651';
 var JOTFORM_FORM_JUZGAMIENTO = '241387353267664';
 var PIN_ORGANIZADOR = '241430';
-var URL_CONSULTOR_DOCS = 'https://bamf2026-visoradjuntos.pages.dev/index.html';
+var URL_CONSULTOR_DOCS = 'https://bamf2026-consulta.pages.dev/bamf2026_consulta_documentacion_v9.html';
 
 // ============ PROXY SEGURO (Cloudflare Pages Function) ============
 // La API Key de JotForm ya NO vive acá — vive del lado del servidor, en
@@ -838,12 +838,30 @@ function doSearch(){
 }
 
 function searchInscripcionByOrden(ordenStr){
-  var filterObj = { 'q448:eq': ordenStr, 'status': 'ACTIVE' };
-  return jfCall('get', '/form/'+JOTFORM_FORM_INSCRIPCION+'/submissions', {limit:5, filter: JSON.stringify(filterObj)}).then(function(d){
-    if(d.responseCode !== 200) throw new Error(d.message||'API error');
-    var subs = d.content || [];
-    if(subs.length === 0) return null;
-    return parseInscripcion(subs[0]);
+  // OJO: el filtro por ID de campo de JotForm no filtra confiable en
+  // esta cuenta (mismo problema que en checkJuzgamientoExistente) — acá
+  // es más grave todavía, porque si trae el modelo equivocado, un jurado
+  // podría estar juzgando algo distinto a lo que cree sin darse cuenta.
+  // Por eso traemos todo (paginado) y comparamos el orden acá.
+  var ordenNorm = String(ordenStr).replace(/^0+/,'') || String(ordenStr);
+  function traerPagina(offset, acumuladas){
+    var limit = 1000;
+    return jfCall('get', '/form/'+JOTFORM_FORM_INSCRIPCION+'/submissions', {limit: limit, offset: offset, filter: JSON.stringify({status:'ACTIVE'})}).then(function(d){
+      if(d.responseCode !== 200) return acumuladas;
+      var batch = d.content || [];
+      acumuladas = acumuladas.concat(batch);
+      if(batch.length === limit) return traerPagina(offset + limit, acumuladas);
+      return acumuladas;
+    });
+  }
+  return traerPagina(0, []).then(function(subs){
+    var match = subs.filter(function(sub){
+      var a = sub.answers || {};
+      var ordenGuardado = String(getAns(a[QID_INSCR.orden]) || '').replace(/^0+/,'');
+      return ordenGuardado === ordenNorm;
+    });
+    if(match.length === 0) return null;
+    return parseInscripcion(match[0]);
   });
 }
 
@@ -879,15 +897,29 @@ function getSubcategoria(m){
 }
 
 function checkJuzgamientoExistente(orden){
-  var ordenStr = String(orden).replace(/^0+/,'') || orden;
-  // El qid del orden en juzgamiento es 488 — pero el valor guardado puede tener formato distinto
-  // Intentamos buscar por valor
-  var filterObj = { ['q' + QID_JUZG.orden + ':eq']: ordenStr };
-  return jfCall('get', '/form/'+JOTFORM_FORM_JUZGAMIENTO+'/submissions', {limit:5, filter: JSON.stringify(filterObj)}).then(function(d){
-    if(d.responseCode !== 200) return null;
-    var subs = d.content || [];
-    // Filtrar solo submissions ACTIVE (no eliminadas)
-    var active = subs.filter(function(s){ return s.status !== 'DELETED' && s.status !== 'OVERQUOTA'; });
+  var ordenStr = String(orden).replace(/^0+/,'') || String(orden);
+  // OJO: el filtro por ID de campo de JotForm ("q488:eq") no filtra
+  // confiable en esta cuenta — devuelve resultados igual aunque no
+  // matcheen, lo que hacía que CUALQUIER modelo pareciera "ya juzgado"
+  // después del primer envío. Por eso traemos todas las submissions
+  // (paginado) y comparamos el orden acá, del lado del cliente.
+  function traerPagina(offset, acumuladas){
+    var limit = 1000;
+    return jfCall('get', '/form/'+JOTFORM_FORM_JUZGAMIENTO+'/submissions', {limit: limit, offset: offset}).then(function(d){
+      if(d.responseCode !== 200) return acumuladas;
+      var batch = d.content || [];
+      acumuladas = acumuladas.concat(batch);
+      if(batch.length === limit) return traerPagina(offset + limit, acumuladas);
+      return acumuladas;
+    });
+  }
+  return traerPagina(0, []).then(function(subs){
+    var active = subs.filter(function(s){
+      if(s.status === 'DELETED' || s.status === 'OVERQUOTA') return false;
+      var a = s.answers || {};
+      var ordenGuardado = String(getAns(a[QID_JUZG.orden]) || '').replace(/^0+/,'');
+      return ordenGuardado === ordenStr;
+    });
     if(active.length === 0) return null;
     var s = active[0];
     var a = s.answers || {};
